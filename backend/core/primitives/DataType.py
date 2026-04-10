@@ -1,178 +1,118 @@
 from enum import Enum, auto
 from typing import Union, Any, Optional, Type, TypeVar
+from __future__ import annotations
 from numbers import Number
 import numpy as np
+import copy
 
+
+
+
+# Типовая переменная для обобщённых методов класса Enum
 T = TypeVar("T", bound="EnumClassAbstraction")
 
 class EnumClassAbstraction:
-    """Миксин, реализующий универсальный from_input для Enum‑классов."""
+    """
+    Миксин, предоставляющий универсальный метод from_input для классов Enum.
+    Позволяет преобразовывать строковые представления или экземпляры Enum в члены Enum.
+    """
     @classmethod
     def from_input(cls: Type[T], value: Union[str, T]) -> T:
-        """Преобразует строку (или сам экземпляр Enum) в объект перечисления."""
+        """
+        Преобразует строку (или экземпляр Enum) в объект Enum.
+        Обрабатывает регистронезависимое сопоставление и проверяет тип входных данных.
+        """
+        # Если уже экземпляр Enum, вернуть как есть
         if isinstance(value, cls):
             return value
+        # Нормализация строкового ввода: удаление пробелов и преобразование в верхний регистр
         if isinstance(value, str):
             norm = value.strip().upper()
             for member in cls:
                 if member.name == norm:
                     return member
-            raise ValueError(f'Неизвестный {cls.__name__}: {value}')
-        raise ValueError(f'Неподдерживаемый тип для {cls.__name__}')
+            raise ValueError(f'Unknown {cls.__name__}: {value}')
+        raise ValueError(f'Unsupported type for {cls.__name__}')
     
     def to_string(self):
-        return str(self)
+        """Преобразует член Enum в строковое представление."""
+        return self.name
 
 # ---------------------------------------------------------------------------
 
-class ValueStatus(Enum, EnumClassAbstraction):
-    """Статусы значений для отслеживания состояния параметра"""
-    UNKNOWN   = auto()  # Величина неизвестна
-    DEPEND    = auto()  # Значение пришло от связи с другим элементом
-    CALCULATED= auto()  # Значение было рассчитано в этом элементе
-    FIXED     = auto()  # Значение фиксировано и задано
+class ValueStatus(EnumClassAbstraction, Enum):
+    """
+    Значения статуса для отслеживания состояния/происхождения значения параметра.
+    Используется для определения способа получения значения (вычислено, задано и т.д.).
+    """
+    UNKNOWN   = auto()  # Значение неизвестно/не задано
+    DEPEND    = auto()  # Значение получено из связи с другим элементом
+    CALCULATED= auto()  # Значение вычислено внутри этого элемента
+    FIXED     = auto()  # Значение фиксировано и явно задано
 
 # ---------------------------------------------------------------------------
 
-class DataType(Enum, EnumClassAbstraction):
-    """Типы данных, которыми обмениваются элементы"""
-    FLOAT       = auto()  # С плавающей точкой
-    LOGIC       = auto()  # Логические
-    LOGIC_TRUE  = auto()  # ИСТИНА – конкретный результат логического выражения (для ветвления)
-    LOGIC_FALSE = auto()  # ЛОЖЬ – конкретный результат логического выражения (для ветвления)
-    TIMESTAMP   = auto()  # Время
-    STRING      = auto()  # Строковые данные
+class DataType(EnumClassAbstraction, Enum):
+    """
+    Типы данных, которыми могут обмениваться элементы.
+    Определяет систему типов для значений в системе расчётов.
+    """
+    FLOAT       = auto()  # Числа с плавающей запятой
+    LOGIC       = auto()  # Логические значения
+    LOGIC_TRUE  = auto()  # TRUE - специфический результат логического выражения (для ветвления)
+    LOGIC_FALSE = auto()  # FALSE - специфический результат логического выражения (для ветвления)
+    TIMESTAMP   = auto()  # Значения даты/времени
+    STRING      = auto()  # Текстовые данные
     INT         = auto()  # Целочисленные значения
 
-        
-class ValueSpec:
-    """Спецификаия величины, метаинформация о величине/параметре"""
-    def __init__(self, value_name: str = '', dimension: str = ''):
-        self.value_name = value_name  # Название величины (давление/температура)
-        self.dimension = dimension  # Размерность величины
-    
-def validate_data(data: Any, dtype: DataType,
-                  min_val: Optional[Union[int, float]]=None,
-                  max_val: Optional[Union[int, float]]=None):
-
-    # Вспомогательные функции для проверки типов
-    def _is_numeric(value: Any):
-        """Являются ли данные с типом с плавающей запятой"""
-        if isinstance(value, (Number, bool)):
-            return True
-        if isinstance(value, (list, tuple)):
-            return all(_is_numeric(v) for v in value)
-        if isinstance(value, np.ndarray):
-            return np.issubdtype(value.dtype, np.number)
-        return False
-
-    def _is_integer(value):
-        """Являются ли данные целочисленными"""
-        if isinstance(value, (int, bool)):
-            return True
-        if isinstance(value, (list, tuple)):
-            return all(_is_integer(v) for v in value)
-        if isinstance(value, np.ndarray):
-            return np.issubdtype(value.dtype, np.integer) or np.issubdtype(value.dtype, np.bool_)
-        return False
-
-    def _is_logical(value):
-        """Являются ли данные логическими"""
-        # Логические: bool, 0/1
-        if isinstance(value, bool):
-            return True
-        if isinstance(value, int) and value in (0, 1):
-            return True
-        if isinstance(value, (list, tuple)):
-            return all(_is_logical(v) for v in value)
-        if isinstance(value, np.ndarray):
-            # если массив bool или целочисленный с 0/1
-            if np.issubdtype(value.dtype, np.bool_):
-                return True
-            if np.issubdtype(value.dtype, np.integer):
-                return np.all((value == 0) | (value == 1))
-        return False
-
-    
-
-
-
-
-        
-class Value:
-    """ Описание параметра
-    name - имя параметра
-    value - значение параметра
-    value_spec - спецификация параметра
-    description - описание параметра
-    status - статус параметра
-    value_type - тип данных в параметре
-    store_prev - сохранять ли предыдущее состояние
-    min_value - минимальное значение
-    max_value - максимальное значение
+class ObjectType(EnumClassAbstraction, Enum):
     """
-    def __init__(self, name: str, 
-                 value: Any, 
-                 value_spec: ValueSpec,
-                 description: str = '',
-                 status: ValueStatus = ValueStatus.UNKNOWN,
-                 value_type: DataType = DataType.FLOAT,
-                 store_prev: bool = False,
-                 min_value: Optional[Any] = None,
-                 max_value: Optional[Any] = None):
+    Типы объектов, которые на фундаментально работают в системе.
+    """
+    UNKNOWN = auto()
+    VALUE = auto()  # Параметры
+    ELEMENT = auto()  # Элементы
+    PORT = auto()  # Порты
 
+class BaseObject:
+    def __init__(self, name, obj_type: Union[ObjectType, str]=ObjectType.UNKNOWN):
         self._name = name
-        self._description = description
-        self._status = status
-        self._value_type = value_type
-        self._value_spec = value_spec
-        self._store_prev = store_prev
-        self._min_value = min_value
-        self._max_value = max_value
-        self._value = value
-
-        self._prev_value = None
-        self._prev_status = ValueStatus.UNKNOWN
-
-
-    def _validate(self, value: Any):
-        '''
-        Валидация входящих данных
-        будут проверки по типу и по min max если они заданы и если 
-        тип хранящихся данных позволяет провести сравнение (например str не получится)
-        '''
-        if value is None:
-            return
-        
-
-         
-
-    def update(self, new_value: Any, new_status: Optional[ValueStatus] = None):
-        '''Обновление данных в параметре
-        new_value - новое значение величины
-        new_status - новый статус
-        '''
-        self._validate(new_value)
-
-
+        self._object_type = ObjectType.from_input(obj_type)
 
     @property
-    def value(self) -> Any:
-        return self._value
+    def name(self):
+        return self._name
     
-    @value.setter
-    def value(self, new_value: Any):
-        self.update(new_value)
-
-
+    @property
+    def object_type(self):
+        return self._object_type.to_string()
     
+    def to_dict(self):
+        pass
 
+    @classmethod
+    def from_dict(cls, data: dict):
+        pass
 
+class ValueSpec:
+    """
+    Спецификация величины/параметра.
+    Содержит метаданные о значении, такие как его имя и физическая размерность.
+    """
+    def __init__(self, value_name: str = '', dimension: str = ''):
+        self.value_name = value_name  # Название величины (например, давление, температура)
+        self.dimension = dimension  # Физическая размерность/единица (например, Па, К)
 
-
-
-
-
-
-
-
+    @classmethod
+    def from_dict(cls, spec: dict):
+        """Создаёт ValueSpec из словаря (для десериализации)."""
+        return cls(value_name=spec.get('value_name', ''), dimension=spec.get('dimension', ''))
+    
+    def __eq__(self, other: ValueSpec) -> bool:
+        if (self.value_name, self.dimension) == (other.value_name, other.dimension):
+            return True
+        else:
+            return False
+        
+    def __ne__(self, other: ValueSpec) -> bool:
+        return not self == other
