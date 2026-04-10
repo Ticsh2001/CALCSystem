@@ -1,4 +1,4 @@
-from core.primitives.DataType import BaseObject, ObjectType
+from core.primitives.DataType import BaseObject, ObjectType, ValueStatus
 from core.primitives.ObjectsStorage import ObjectsStorage
 from core.primitives.Value import Value
 from typing import Union, Any, Optional, Type, TypeVar
@@ -6,7 +6,7 @@ import uuid
 
 
 
-class Port(BaseObject):
+class Port(BaseObject, ObjectsStorage):
     def __init__(self, name: str, values_number: int=-1):
         super().__init__(name, ObjectType.PORT)
         self._values = ObjectsStorage(ObjectType.VALUE, values_number, lock_names=True)
@@ -26,6 +26,16 @@ class Port(BaseObject):
 
     def list_names(self):
         return [val.name for val in self._values]
+    
+    def list_status(self, status: Optional[ValueStatus]=None):
+        if status is None:
+            return {val.name: val.status for val in self._values}
+        else:
+            return [val.name for val in self._values]
+        
+    
+    
+
     
 
 

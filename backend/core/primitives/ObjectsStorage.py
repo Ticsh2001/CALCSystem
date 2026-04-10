@@ -83,8 +83,13 @@ class ObjectsStorage:
         return iter(self._items.values())
     
     # ----- Альтернатива: использовать __getitem__, __setitem__ для доступа по ключу -----
-    def __getitem__(self, key: uuid.UUID) -> T:
-        return self._items[key]
+    def __getitem__(self, key: Union[uuid.UUID, str]) -> T:
+        if isinstance(key, uuid.UUID):
+            return self._items[key]
+        elif self._lock_names and isinstance(key, str):
+            return self._items[self._names[key]]
+        else:
+            return None                               
     
     def __delitem__(self, key: uuid.UUID) -> None:
         del self._items[key]
