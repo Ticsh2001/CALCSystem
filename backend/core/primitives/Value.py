@@ -1,4 +1,4 @@
-from core.primitives.DataType import ValueSpec, ValueStatus, ObjectType, BaseObject, DataType
+from backend.core.primitives.DataType import ValueSpec, ValueStatus, ObjectType, BaseObject, DataType
 from typing import Union, Any, Optional, Type, TypeVar
 from numbers import Number
 import numpy as np
@@ -100,7 +100,8 @@ class Value(BaseObject):
         max_value: Максимально допустимое значение (для числовых типов)
     """
     def __init__(self, name: str, 
-                 value: Any, 
+                 value: Any,
+                 serialize_data: bool, 
                  value_spec: Union[ValueSpec, dict],
                  description: str = '',
                  status: Union[ValueStatus, str] = ValueStatus.UNKNOWN,
@@ -128,6 +129,7 @@ class Value(BaseObject):
         self._value = self._copy_value(value)
         self._prev_value = None
         self._prev_status = ValueStatus.UNKNOWN
+        self._serialize_data = serialize_data
 
     @staticmethod
     def _copy_value(val):
@@ -167,6 +169,14 @@ class Value(BaseObject):
     def value(self, new_value: Any):
         """Устанавливает новое значение с помощью метода update."""
         self.update(new_value)
+
+    @property
+    def serialize_data(self) -> bool:
+        return self._serialize_data
+    
+    @serialize_data.setter
+    def serialize_data(self, serialize_data: bool):
+        self._serialize_data = serialize_data
 
     @property
     def status(self) -> str:
@@ -215,14 +225,17 @@ class Value(BaseObject):
 
     def to_dict(self) -> dict:
         """Сериализует объект Value в словарь."""
-        result = {**super().to_dict(),  **{'value': self._value,
-                                           'value_spec': {
-                                               'value_name': self._value_spec.value_name,
-                                               'dimension': self._value_spec.dimension},
-                                           'description': self._description,
-                                           'status': self._status.to_string(),
-                                           'value_type': self._value_type.to_string(),
-                                           'store_prev': self._store_prev,
-                                           'min_value': self._min_value,
-                                           'max_value': self._max_value}}
+        res_1 = super().to_dict()
+        res_2 = {'value_spec': {'value_name': self._value_spec.value_name,
+                                'dimension': self._value_spec.dimension},
+                                'description': self._description,
+                                'status': self._status.to_string(),
+                                'value_type': self._value_type.to_string(),
+                                'store_prev': self._store_prev,
+                                'min_value': self._min_value,
+                                'max_value': self._max_value,
+                                'serialize_data': self._serialize_data}
+        if self._serialize_data:
+            res_2['value'] = self._value
+        result = {**res_1,  **res_2}
         return result

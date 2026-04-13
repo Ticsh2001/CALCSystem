@@ -1,6 +1,6 @@
-from core.primitives.DataType import BaseObject, ObjectType, ValueStatus
-from core.primitives.ObjectsStorage import ObjectsStorage
-from core.primitives.Value import Value
+from backend.core.primitives.DataType import BaseObject, ObjectType, ValueStatus
+from backend.core.primitives.ObjectsStorage import ObjectsStorage
+from backend.core.primitives.Value import Value
 from typing import Union, Any, Optional, Type, TypeVar, Dict, Tuple
 import uuid
 from collections import Counter
@@ -11,6 +11,7 @@ from collections import Counter
 class Port(BaseObject):
     def __init__(self, name: str, values_number: int=-1):
         super().__init__(name, ObjectType.PORT)
+        self._direction
         self._values = ObjectsStorage(f'{name}_values', ObjectType.VALUE, values_number, lock_names=True)
 
     def register(self, value_object: Value) -> uuid.UUID:
@@ -69,7 +70,13 @@ class Port(BaseObject):
 
     def __ne__(self, other: Port) -> bool:
         return not self == other
-
+    
+    def __setitem__(self, key: Union[uuid.UUID, str, int], element: Value):
+        self._values[key] = element
+    
+    def is_known(self):
+        return all([False if val.status == 'UNKNOWN' else True for val in self._vlues])
+        
     def to_dict(self) -> Dict:
         result = super().to_dict()
         result['values'] = self._values.to_dict()
