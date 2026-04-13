@@ -5,9 +5,6 @@ from numbers import Number
 import numpy as np
 import copy
 
-
-
-
 # Типовая переменная для обобщённых методов класса Enum
 T = TypeVar("T", bound="EnumClassAbstraction")
 
@@ -73,11 +70,12 @@ class ObjectType(EnumClassAbstraction, Enum):
     VALUE = auto()  # Параметры
     ELEMENT = auto()  # Элементы
     PORT = auto()  # Порты
+    STORAGE = auto() #Хранилище
 
 class BaseObject:
-    def __init__(self, name, obj_type: Union[ObjectType, str]=ObjectType.UNKNOWN):
+    def __init__(self, name, object_type: Union[ObjectType, str]=ObjectType.UNKNOWN):
         self._name = name
-        self._object_type = ObjectType.from_input(obj_type)
+        self._object_type = ObjectType.from_input(object_type)
 
     @property
     def name(self):
@@ -88,11 +86,7 @@ class BaseObject:
         return self._object_type.to_string()
     
     def to_dict(self):
-        pass
-
-    @classmethod
-    def from_dict(cls, data: dict):
-        pass
+        return {'name': self._name, 'object_type': self._object_type}
 
 class ValueSpec:
     """
@@ -116,3 +110,6 @@ class ValueSpec:
         
     def __ne__(self, other: ValueSpec) -> bool:
         return not self == other
+
+    def __hash__(self):
+        return hash((self.value_name, self.dimension))

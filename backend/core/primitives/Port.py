@@ -1,37 +1,81 @@
 from core.primitives.DataType import BaseObject, ObjectType, ValueStatus
 from core.primitives.ObjectsStorage import ObjectsStorage
 from core.primitives.Value import Value
-from typing import Union, Any, Optional, Type, TypeVar
+from typing import Union, Any, Optional, Type, TypeVar, Dict, Tuple
 import uuid
+from collections import Counter
 
 
 
-class Port(BaseObject, ObjectsStorage):
+
+class Port(BaseObject):
     def __init__(self, name: str, values_number: int=-1):
         super().__init__(name, ObjectType.PORT)
-        self._values = ObjectsStorage(ObjectType.VALUE, values_number, lock_names=True)
+        self._values = ObjectsStorage(f'{name}_values', ObjectType.VALUE, values_number, lock_names=True)
 
-    def register(self, value_object: Union[Value, dict]) -> uuid.UUID:
-        if not isinstance(value_object, dict):
-            key = self._values.add(value_object)
-        else:
-            key = self._values.add(Value.from_dict(value_object))
+    def register(self, value_object: Value) -> uuid.UUID:
+        key = self._values.add(value_object)
         return key
     
-    def register_with_key(self, key, value_object: Union[Value, dict]):
-        if not isinstance(value_object, dict):
-            self._values.add_with_key(key, value_object)
-        else:
-            self._values.add_with_key(key, Value.from_dict(value_object))
+    def register_with_key(self, key: uuid.UUID, value_object: Value):
+        self._values.add_with_key(key, value_object)
 
-    def list_names(self):
-        return [val.name for val in self._values]
+    def registered_names(self):
+        return self._values.registered_names()
     
-    def list_status(self, status: Optional[ValueStatus]=None):
-        if status is None:
-            return {val.name: val.status for val in self._values}
+    def list_status(self) -> Dict[str, str]:
+        return {val.name: val.status for val in self._values}
+
+    def value(self, key: Union[str, uuid.UUID]) -> Optional[Any]:
+        val = self._values.get(key)
+        if val is not None:
+            return val.value
         else:
-            return [val.name for val in self._values]
+            return None
+
+    def status(self, key: Union[str, uuid.UUID]) -> Optional[str]:
+        val = self._values.get(key)
+        if val is not None:
+            return val.status
+        else:
+            return None
+
+    def full_info(self, key: Union[str, uuid.UUID]) -> Optional[Tuple]:
+        val = self._values.get(key)
+        if val is not None:
+            return val.value, val.status
+        else:
+            return None
+
+    def __getitem__(self, key: Union[str, uuid.UUID, int]) -> Optional[Tuple]:
+        val = self._values[key]
+        if val is not None:
+            return val.value, val.status
+        else:
+            return None
+
+    def __len__(self) -> int:
+        return len(self._values)
+
+    def __iter__(self):
+        return iter(self._values)
+
+    def __eq__(self, other: Port) -> bool:
+        if not isinstance(other, Port):
+            return NotImplemented
+        self_specs = [val.spec for val in self._values]
+        other_specs = [val.spec for val in other._values]
+        return Counter(self_specs) == Counter(other_specs)
+
+    def __ne__(self, other: Port) -> bool:
+        return not self == other
+
+    def to_dict(self) -> Dict:
+        result = super().to_dict()
+        result['values'] = self._values.to_dict()
+        return result
+
+
         
     
     

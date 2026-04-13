@@ -215,34 +215,14 @@ class Value(BaseObject):
 
     def to_dict(self) -> dict:
         """Сериализует объект Value в словарь."""
-        result = {
-            'name': self._name,
-            'value': self._value,
-            'object_type': self._object_type,
-            'value_spec': {
-                'value_name': self._value_spec.value_name,
-                'dimension': self._value_spec.dimension
-            },
-            'description': self._description,
-            'status': self._status.to_string(),
-            'value_type': self._value_type.to_string(),
-            'store_prev': self._store_prev,
-            'min_value': self._min_value,
-            'max_value': self._max_value
-        }
+        result = {**super().to_dict(),  **{'value': self._value,
+                                           'value_spec': {
+                                               'value_name': self._value_spec.value_name,
+                                               'dimension': self._value_spec.dimension},
+                                           'description': self._description,
+                                           'status': self._status.to_string(),
+                                           'value_type': self._value_type.to_string(),
+                                           'store_prev': self._store_prev,
+                                           'min_value': self._min_value,
+                                           'max_value': self._max_value}}
         return result
-
-    @classmethod
-    def from_dict(cls, data: dict):
-        """Создаёт объект Value из словаря (для десериализации)."""
-        return cls(
-            name=data['name'],
-            value=data['value'],
-            value_spec=data.get('value_spec', {}),
-            description=data.get('description', ''),
-            status=data.get('status', ValueStatus.UNKNOWN),
-            value_type=data.get('value_type', DataType.FLOAT),
-            store_prev=data.get('store_prev', False),
-            min_value=data.get('min_value'),
-            max_value=data.get('max_value')
-        )
