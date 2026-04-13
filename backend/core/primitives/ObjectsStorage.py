@@ -64,18 +64,24 @@ class ObjectsStorage(BaseObject):
         else:
             return None
         
-    def get(self, key: Union[uuid.UUID, str]) -> Optional[T]:
+    def get(self, key: Union[uuid.UUID, str, int]) -> T:
         """Получить элемент по ключу."""
         if isinstance(key, uuid.UUID):
-            return self._items.get(key)
+            val = self._items.get(key)
+            if val is None:
+                raise KeyError(f"Key {key} not found")
+            return val
         elif self._lock_names and isinstance(key, str):
-            uid = self._names.get(key, None)
-            if uid is not None:
-                return self._items.get(uid, None)
-            else:
-                return None
-        else:
-            return None
+            uid = self._names.get(key)
+            if uid is None:
+                raise KeyError(f"Name '{key}' not found")
+            return self._items[uid]
+        elif isinstance(key, int):
+            keys = list(self._items.keys())
+            if 0 <= key < len(keys):
+                return self._items[keys[key]]
+            raise IndexError("Index out of range")
+        raise KeyError(f"Unsupported key type {type(key)}")
     
     def contains(self, key: Union[uuid.UUID, str]) -> bool:
         """Проверить наличие элемента по ключу."""
@@ -114,27 +120,12 @@ class ObjectsStorage(BaseObject):
     
     # ----- Альтернатива: использовать __getitem__, __setitem__ для доступа по ключу -----
     def __getitem__(self, key: Union[uuid.UUID, str, int]) -> T:
-        if isinstance(key, uuid.UUID):
-            val = self._items.get(key)
-            if val is None:
-                raise KeyError(f"Key {key} not found")
-            return val
-        elif self._lock_names and isinstance(key, str):
-            uid = self._names.get(key)
-            if uid is None:
-                raise KeyError(f"Name '{key}' not found")
-            return self._items[uid]
-        elif isinstance(key, int):
-            keys = list(self._items.keys())
-            if 0 <= key < len(keys):
-                return self._items[keys[key]]
-            raise IndexError("Index out of range")
-        raise KeyError(f"Unsupported key type {type(key)}")
-
+        return self.get(key)
+        
     def __setitem__(self, key: Union[uuid.UUID, str, int], element: T):
         if isinstance(key, uuid.UUID):
             if key not in self._items:
-                raise KeyError(f"Element with key {uid} not found")
+                raise KeyError(f"Element with key {key} not found")
             uid = key
         elif isinstance(key, str):
             if not self._lock_names:

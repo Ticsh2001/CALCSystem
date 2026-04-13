@@ -33,8 +33,14 @@ class Element(BaseObject):
     def port(self, idx: str):
         port, key = self._calc_address(idx)
         return port
+    
+    def value(self, idx: str):
+        port, key = self._calc_address(idx)
+        if key is not None:
+            return port[key]
+        else:
+            raise KeyError("Wrong Value Name")
        
-        
     def __getitem__(self, idx: str):
         return self.port(idx)
     

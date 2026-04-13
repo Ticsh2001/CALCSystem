@@ -9,9 +9,9 @@ from collections import Counter
 
 
 class Port(BaseObject):
-    def __init__(self, name: str, values_number: int=-1):
+    def __init__(self, name: str, values_number: int=-1, direction: str='both'):
         super().__init__(name, ObjectType.PORT)
-        self._direction
+        self._direction = direction
         self._values = ObjectsStorage(f'{name}_values', ObjectType.VALUE, values_number, lock_names=True)
 
     def register(self, value_object: Value) -> uuid.UUID:
@@ -26,34 +26,23 @@ class Port(BaseObject):
     
     def list_status(self) -> Dict[str, str]:
         return {val.name: val.status for val in self._values}
+    
 
-    def value(self, key: Union[str, uuid.UUID]) -> Optional[Any]:
+    def value(self, key: Union[str, uuid.UUID, int]):
+        return self._values.get(key)
+    
+    def quantity(self, key: Union[str, uuid.UUID, int]):
+        return self._values.get(key).value
+ 
+    def status(self, key: Union[str, uuid.UUID, int]) -> str:
+        return self._values.get(key).status
+
+    def info(self, key: Union[str, uuid.UUID, int]) -> Optional[Tuple]:
         val = self._values.get(key)
-        if val is not None:
-            return val.value
-        else:
-            return None
+        return val.value, val.status
 
-    def status(self, key: Union[str, uuid.UUID]) -> Optional[str]:
-        val = self._values.get(key)
-        if val is not None:
-            return val.status
-        else:
-            return None
-
-    def full_info(self, key: Union[str, uuid.UUID]) -> Optional[Tuple]:
-        val = self._values.get(key)
-        if val is not None:
-            return val.value, val.status
-        else:
-            return None
-
-    def __getitem__(self, key: Union[str, uuid.UUID, int]) -> Optional[Tuple]:
-        val = self._values[key]
-        if val is not None:
-            return val.value, val.status
-        else:
-            return None
+    def __getitem__(self, key: Union[str, uuid.UUID, int]):
+        return self._values[key]
 
     def __len__(self) -> int:
         return len(self._values)
@@ -75,7 +64,17 @@ class Port(BaseObject):
         self._values[key] = element
     
     def is_known(self):
-        return all([False if val.status == 'UNKNOWN' else True for val in self._vlues])
+        return all([False if val.status == 'UNKNOWN' else True for val in self._values])
+    
+    @property
+    def direction(self):
+        return self._direction
+    
+    def list_by_status(self, status: Union[ValueStatus, str]):
+        if isinstance(status, ValueStatus):
+            return [val.name for val in self._values if val.status == status.to_string()]
+        elif isinstance(status, str):
+            return [val.name for val in self._values if val.status == status]
         
     def to_dict(self) -> Dict:
         result = super().to_dict()
