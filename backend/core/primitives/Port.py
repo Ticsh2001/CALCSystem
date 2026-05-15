@@ -26,10 +26,12 @@ class Port(BaseObject):
     
     def list_status(self) -> Dict[str, str]:
         return {val.name: val.status for val in self._values}
-    
 
     def value(self, key: Union[str, uuid.UUID, int]):
         return self._values.get(key)
+
+    def uuid(self, key: Union[str, int]):
+        return self._values.get_uuid(key)
     
     def quantity(self, key: Union[str, uuid.UUID, int]):
         return self._values.get(key).value
@@ -40,6 +42,9 @@ class Port(BaseObject):
     def info(self, key: Union[str, uuid.UUID, int]) -> Optional[Tuple]:
         val = self._values.get(key)
         return val.value, val.status
+
+    def contains(self, key: Union[uuid.UUID, str]):
+        return self._values.contains(key)
 
     def __getitem__(self, key: Union[str, uuid.UUID, int]):
         return self._values[key]
@@ -78,6 +83,7 @@ class Port(BaseObject):
         
     def to_dict(self) -> Dict:
         result = super().to_dict()
+        result['direction'] = self._direction
         result['values'] = self._values.to_dict()
         return result
 

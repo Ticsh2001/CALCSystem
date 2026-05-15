@@ -1,5 +1,5 @@
 from backend.core.primitives.DataType import ValueSpec, ValueStatus, ObjectType, BaseObject, DataType
-from typing import Union, Any, Optional, Type, TypeVar
+from typing import Union, Any, Optional, Type, TypeVar, Callable
 from numbers import Number
 import numpy as np
 import copy
@@ -68,6 +68,9 @@ def validate_data(data: Any, dtype: DataType,
             raise TypeError('Wrong type of input data')
     elif dtype.to_string() == 'LOGIC':
         if not _is_logical(data):
+            raise TypeError('Wrong type of input data')
+    elif dtype.to_string() == 'OBJECT':
+        if not isinstance(data, Callable):
             raise TypeError('Wrong type of input data')
     elif dtype.to_string() == 'TIMESTAMP':
         if not np.issubdtype(data.dtype, np.datetime64):
@@ -239,3 +242,9 @@ class Value(BaseObject):
             res_2['value'] = self._value
         result = {**res_1,  **res_2}
         return result
+
+    def __call__(self, **kwargs):
+        if self.value_type == 'OBJECT':
+            return self._value(**kwargs)
+        else:
+            return self.value

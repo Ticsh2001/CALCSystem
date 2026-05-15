@@ -1,6 +1,7 @@
+from __future__ import annotations
 from enum import Enum, auto
 from typing import Union, Any, Optional, Type, TypeVar
-from __future__ import annotations
+
 from numbers import Number
 import numpy as np
 import copy
@@ -61,6 +62,7 @@ class DataType(EnumClassAbstraction, Enum):
     TIMESTAMP   = auto()  # Значения даты/времени
     STRING      = auto()  # Текстовые данные
     INT         = auto()  # Целочисленные значения
+    OBJECT      = auto()  # Объект
 
 class ObjectType(EnumClassAbstraction, Enum):
     """
@@ -71,6 +73,7 @@ class ObjectType(EnumClassAbstraction, Enum):
     ELEMENT = auto()  # Элементы
     PORT = auto()  # Порты
     STORAGE = auto() #Хранилище
+    PLUGIN = auto()  #Плагин
 
 class BaseObject:
     def __init__(self, name, object_type: Union[ObjectType, str]=ObjectType.UNKNOWN):
@@ -86,24 +89,26 @@ class BaseObject:
         return self._object_type.to_string()
     
     def to_dict(self):
-        return {'name': self._name, 'object_type': self._object_type}
+        return {'name': self._name, 'object_type': self._object_type.to_string()}
 
 class ValueSpec:
     """
     Спецификация величины/параметра.
     Содержит метаданные о значении, такие как его имя и физическая размерность.
     """
-    def __init__(self, value_name: str = '', dimension: str = ''):
+    def __init__(self, value_name: str = '', dimension: str = '', group: str = ''):
         self.value_name = value_name  # Название величины (например, давление, температура)
         self.dimension = dimension  # Физическая размерность/единица (например, Па, К)
+        self.group = group
 
     @classmethod
     def from_dict(cls, spec: dict):
         """Создаёт ValueSpec из словаря (для десериализации)."""
-        return cls(value_name=spec.get('value_name', ''), dimension=spec.get('dimension', ''))
+        return cls(value_name=spec.get('value_name', ''), dimension=spec.get('dimension', ''),
+                   group=spec.get('group', ''))
     
     def __eq__(self, other: ValueSpec) -> bool:
-        if (self.value_name, self.dimension) == (other.value_name, other.dimension):
+        if (self.value_name, self.dimension, self.group) == (other.value_name, other.dimension, other.group):
             return True
         else:
             return False
@@ -112,4 +117,4 @@ class ValueSpec:
         return not self == other
 
     def __hash__(self):
-        return hash((self.value_name, self.dimension))
+        return hash((self.value_name, self.dimension, self.group))

@@ -1,4 +1,4 @@
-from backend.core.primitives import ObjectType, BaseObject
+from backend.core.primitives.DataType import ObjectType, BaseObject
 import uuid
 from typing import Any, Callable, Dict, Iterator, List, Optional, TypeVar, Union
 
@@ -35,6 +35,14 @@ class ObjectsStorage(BaseObject):
         if self._lock_names:
             self._names[element.name] = key
         return key
+
+    def get_uuid(self, key: Union[int, str]):
+        if isinstance(key, str) and self._lock_names:
+            return self._names[key]
+        elif isinstance(key, int):
+            return list(self._items.keys())[key]
+        else:
+            raise KeyError("Wrong key of element")
     
 
         
@@ -105,6 +113,7 @@ class ObjectsStorage(BaseObject):
     
     def __iter__(self) -> Iterator[T]:
         return iter(self._items.values())
+
 
     @property
     def storage_type(self) -> str:
