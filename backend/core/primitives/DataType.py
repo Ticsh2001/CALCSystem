@@ -73,7 +73,7 @@ class ObjectType(EnumClassAbstraction, Enum):
     ELEMENT = auto()  # Элементы
     PORT = auto()  # Порты
     STORAGE = auto() #Хранилище
-    PLUGIN = auto()  #Плагин
+    PORTPLUGIN = auto()  #Плагин для переноса через порты
 
 class BaseObject:
     def __init__(self, name, object_type: Union[ObjectType, str]=ObjectType.UNKNOWN):
@@ -99,7 +99,7 @@ class ValueSpec:
     def __init__(self, value_name: str = '', dimension: str = '', group: str = ''):
         self.value_name = value_name  # Название величины (например, давление, температура)
         self.dimension = dimension  # Физическая размерность/единица (например, Па, К)
-        self.group = group
+        self.group = group #Группа параметров - термодинамические механические и так далее
 
     @classmethod
     def from_dict(cls, spec: dict):

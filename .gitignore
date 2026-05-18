@@ -1,1 +1,6 @@
 /.venv/
+backend/__pycache__/__init__.cpython-312.pyc
+backend/core/__pycache__/__init__.cpython-312.pyc
+backend/core/primitives/__pycache__/__init__.cpython-312.pyc
+backend/core/primitives/__pycache__/DataType.cpython-312.pyc
+backend/core/primitives/__pycache__/Plugin.cpython-312.pyc

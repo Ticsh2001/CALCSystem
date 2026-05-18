@@ -7,7 +7,7 @@ from typing import Optional, List, Any
 
 
 @dataclass
-class PluginParamMeta:
+class PortPluginParamMeta:
     """Метаданные для одного параметра инициализации."""
     type: str = 'str'               # тип данных: 'str', 'float', 'int', 'bool'
     default: Any = None             # значение по умолчанию
@@ -29,29 +29,31 @@ class PluginParamMeta:
         else:
             res['use_by_choice'] = False
         return res
-
-
-class PluginMeta(ABCMeta):
+    
+class PortPluginMeta(ABCMeta):
     def __new__(cls, name, bases, dct):
         init_method = {}
-        calc_methods = []
+        calc_methods = dict()
         for key, value in dct.items():
             if hasattr(value, '_init_params'):
                 init_method[key] = value._init_params
             elif hasattr(value, '_calc_params'):
-                calc_methods.append({key: value._calc_params})
+                calc_methods[key] = value._calc_params
         dct['_init_method'] = init_method
         dct['_calc_methods'] = calc_methods
         return super().__new__(cls, name, bases, dct)
 
 
 
-class Plugin(BaseObject, ABC, metaclass=PluginMeta):
+class PortPlugin(BaseObject, ABC, metaclass=PortPluginMeta):
     def __init__(self, name, author: str='', description: str='', version: str=''):
-        super().__init__(name, ObjectType.PLUGIN)
+        super().__init__(name, ObjectType.PORTPLUGIN)
         self._description = description
         self._version = version
         self._author = author
+        self._init_state = dict()
+        self._last_calc = dict()
+
 
     @staticmethod
     def init_func(**params):
@@ -59,10 +61,10 @@ class Plugin(BaseObject, ABC, metaclass=PluginMeta):
         def decorator(method):
             res = dict()
             for param_name, meta in params.items():
-                if isinstance(meta, PluginParamMeta):
+                if isinstance(meta, PortPluginParamMeta):
                     res[param_name] = meta
                 elif isinstance(meta, dict):
-                    res[param_name] = PluginParamMeta(**meta)
+                    res[param_name] = PortPluginParamMeta(**meta)
                 else:
                     raise TypeError(f"Parameter {param_name} must be ParamMeta or dict")
             method._init_params = res
@@ -75,10 +77,10 @@ class Plugin(BaseObject, ABC, metaclass=PluginMeta):
         def decorator(method):
             res = dict()
             for param_name, meta in params.items():
-                if isinstance(meta, PluginParamMeta):
+                if isinstance(meta, PortPluginParamMeta):
                     res[param_name] = meta
                 elif isinstance(meta, dict):
-                    res[param_name] = PluginParamMeta(**meta)
+                    res[param_name] = PortPluginParamMeta(**meta)
                 else:
                     raise TypeError(f"Parameter {param_name} must be ParamMeta or dict")
             method._calc_params = res
@@ -93,17 +95,19 @@ class Plugin(BaseObject, ABC, metaclass=PluginMeta):
             return next(iter(cls._init_method.values()))
 
     @classmethod
-    def _get_calc_meta(cls, index):
-        if not cls._calc_methods:
-            return {}
-        else:
-            return cls._calc_methods[index]
+    def _get_calc_meta(cls, name):
+        return cls._calc_methods.get(name)
 
 
     @classmethod
-    def _verify_params(cls, **kwargs):
+    def _verify_params(cls, func_name=None, **kwargs):
         types_map = {'int': int, 'float': float, 'str': str}
-        params_meta = cls._get_init_meta()
+        if func_name is None:
+            params_meta = cls._get_init_meta()
+        else:
+            params_meta = cls._get_calc_meta(func_name)
+            if params_meta is None:
+                raise ValueError(f"Calculation method '{func_name}' not found")        
         for param_name, value in kwargs.items():
             meta_data = params_meta.get(param_name, None)
             if meta_data is None:
@@ -127,9 +131,25 @@ class Plugin(BaseObject, ABC, metaclass=PluginMeta):
         init_method_name = next(iter(self.__class__._init_method.keys()))
         init_method = getattr(self, init_method_name)
         if init_method:
+            self._init_state = params
             init_method(**params)
 
-
+    def calculate(self, **params):
+        matching_methods = []
+        for method_name, required_params in self.__class__._calc_methods.items():
+                required_keys = set(required_params.keys())
+                if required_keys.issubset(params.keys()):
+                    matching_methods.append(method_name)
+        if not matching_methods:
+                raise ValueError(f"No calculation method matches the given parameters {list(params.keys())}")
+        matching_methods.sort(key=lambda m: len(self._calc_methods[m]), reverse=True)
+        self.__class__._verify_params(matching_methods[0], **params)
+        calc_method = getattr(self, matching_methods[0])
+        self._last_calc = {matching_methods[0]: params}
+        return calc_method(**params)
+    
+    def __call__(self, **params):
+        return self.calculate(**params)
 
     @property
     def plugin_description(self):
@@ -155,29 +175,11 @@ class Plugin(BaseObject, ABC, metaclass=PluginMeta):
     def get_calc_schema(cls):
         res = dict()
         for calc_method in cls._calc_methods:
-            method_name = 
-            res[cls._calc_methods]
-            calc_method_name =
+            res[calc_method] = {param_name: param_meta.to_dict() for param_name, param_meta in cls._calc_methods[calc_method].items()}
+        return res
+    
 
 
 
 
-
-
-
-
-class PL(Plugin):
-    def __init__(self):
-        super().__init__('test', 'fff', 'dsdds', 'sds')
-
-    @Plugin.init_func(medium=PluginParamMeta(description= 'Среда', choices=['гелий', 'натрий'],
-                                             type= 'str', default='гелий'),
-                      density={'description': 'Плотность', 'min': 10., 'max': 20., 'type': 'float', 'default': 15})
-    def _init_1(self, medium, density):
-        self._medium = medium
-        self._density = density
-
-t = PL()
-init_sc = PL.get_init_schema()
-t.init(medium='натрий', density=11.0)
 
