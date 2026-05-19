@@ -1,7 +1,18 @@
-{
-  "Thermodynamic":
+[
   {
+    "name": "Thermodynamic_port",
+    "max_size": -1,
     "direction": "both",
-    "values": []
+    "values":
+    [
+      "thermodynamic_values.Enthalpy",
+      "thermodynamic_values.Pressure",
+      {
+        "name": "Flow Rate",
+        "value_spec": "Thermodynamic.Flow Rate",
+        "description": "Medium Flow Rate",
+        "value_type": "FLOAT"
+      }
+    ]
   }
-}
+]

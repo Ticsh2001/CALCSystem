@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Enthalpy",
+    "value_spec": "Thermodynamic.Enthalpy",
+    "description": "Medium enthalpy",
+    "value_type": "FLOAT"
+  },
+  {
+    "name": "Pressure",
+    "value_spec": "Thermodynamic.Pressure",
+    "description": "Medium Pressure",
+    "value_type": "FLOAT"
+  }
+]

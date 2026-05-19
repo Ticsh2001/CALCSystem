@@ -1,0 +1,43 @@
+{
+  "Thermodynamic":
+          [
+            {
+              "value_name": "Temperature",
+              "dimension":  "K"
+            },
+            {
+              "value_name": "Pressure",
+              "dimension":  "Pa"
+            },
+            {
+              "value_name": "Flow Rate",
+              "dimension":  "kg/s"
+            },
+            {
+              "value_name": "Enthalpy",
+              "dimension":  "J/kg"
+            }
+          ],
+  "Generic":
+          [
+            {
+              "value_name": "Generic", 
+              "dimension":  ""
+            },
+            {
+              "value_name": "Default", 
+              "dimension":  ""
+            },
+            {
+              "value_name": "Time",
+              "dimension": "s"
+            }
+          ],
+  "Mechanic":
+          [
+            {
+              "value_name": "Velocity",
+              "dimension": "m/s"
+            }
+          ]
+}

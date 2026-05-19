@@ -1,0 +1,47 @@
+{
+    "name": "test_element",
+    "inlet_ports":
+    [
+        {
+            "name": "port_1", 
+            "port_spec": "thermodynamic_port.Thermodynamic_port"
+        },
+        {
+            "name": "port_2", 
+            "port_spec": 
+            {
+                "max_size": -1,
+                "direction": "both",
+                "values":
+                [
+                    "thermodynamic_values.Enthalpy",
+                    "thermodynamic_values.Pressure",
+                    {
+                        "name": "Flow Rate",
+                        "value_spec": "Thermodynamic.Flow Rate",
+                        "description": "Medium Flow Rate",
+                        "value_type": "FLOAT"
+                    }
+                ]
+            }
+        }
+    ],
+    "otlet_ports":
+    [
+        {
+            "name": "port_1", 
+            "port_spec": "thermodynamic_port.Thermodynamic_port"
+        }
+    ],
+    "parameters":
+    [
+        "thermodynamic_values.Enthalpy",
+        "thermodynamic_values.Pressure",
+        {
+            "name": "Flow Rate",
+            "value_spec": "Thermodynamic.Flow Rate",
+            "description": "Medium Flow Rate",
+            "value_type": "FLOAT"
+        }
+    ]
+}
