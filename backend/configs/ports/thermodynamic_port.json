@@ -1,7 +1,7 @@
 [
   {
     "name": "Thermodynamic_port",
-    "max_size": -1,
+    "values_number": -1,
     "direction": "both",
     "values":
     [

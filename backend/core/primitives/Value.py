@@ -104,14 +104,14 @@ class Value(BaseObject):
     """
     def __init__(self, name: str, 
                  value: Any,
-                 serialize_data: bool, 
                  value_spec: Union[ValueSpec, dict],
-                 description: str = '',
+                 description: str='',
                  status: Union[ValueStatus, str] = ValueStatus.UNKNOWN,
                  value_type: Union[DataType, str] = DataType.FLOAT,
-                 store_prev: bool = False,
-                 min_value: Optional[Any] = None,
-                 max_value: Optional[Any] = None):
+                 store_prev: bool=False,
+                 min_value: Optional[Any]=None,
+                 max_value: Optional[Any]=None,
+                 serialize_data: bool=False):
         
         super().__init__(name, ObjectType.VALUE)
         self._description = description
