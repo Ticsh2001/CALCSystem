@@ -7,8 +7,10 @@ T = TypeVar('T')
 class ObjectsStorage(BaseObject):
     """Хранилище элементов с автоматической генерацией UUID ключей."""
     
-    def __init__(self, name: str, storage_type: Union[ObjectType, str], max_size: int = -1, lock_names=False):
-        super().__init__(name=name, obj_type=ObjectType.STORAGE)
+    def __init__(self, name: str, description: str,
+                 storage_type: Union[ObjectType, str],
+                 max_size: int = -1, lock_names=False):
+        super().__init__(name, description, ObjectType.STORAGE)
         self._storage_type = ObjectType.from_input(storage_type)
         self._items: Dict[uuid.UUID, T] = {}
         self._max_size = max_size

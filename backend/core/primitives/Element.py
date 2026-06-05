@@ -8,34 +8,58 @@ import uuid
 
 
 class Element(BaseObject):
-    def __init__(self, name: str, inlet_ports_num: int, outlet_ports_num: int,
+    def __init__(self, name: str, description: str,
+                 inlet_ports_num: int, outlet_ports_num: int,
                  parameters_num: int, registered_uuid: Optional[Dict[str, uuid.UUID]]=None):
-        super().__init__(name, ObjectType.ELEMENT)
-        self._port_groups = ObjectsStorage(name='port_groups', storage_type='STORAGE', max_size=3, lock_names=True)
-        self._register_groups(inlet_ports_num, outlet_ports_num, parameters_num,
+        super().__init__(name, description, ObjectType.ELEMENT)
+        self._port_groups = ObjectsStorage(name='port_groups',
+                                           storage_type='STORAGE',
+                                           max_size=3,
+                                           lock_names=True)
+        self._register_groups(inlet_ports_num,
+                              outlet_ports_num,
+                              parameters_num,
                               registered_uuid)
 
-    def _register_groups(self, inlet_ports_num: int, outlet_ports_num: int,
-                 parameters_num: int, registered_uuid: Optional[Dict[str, uuid.UUID]]=None):
+    def _register_groups(self, inlet_ports_num: int,
+                         outlet_ports_num: int,
+                         parameters_num: int,
+                         registered_uuid: Optional[Dict[str, uuid.UUID]]=None):
         if registered_uuid is None:
-            self._port_groups.add(ObjectsStorage(name='in', storage_type='PORT',
+            self._port_groups.add(ObjectsStorage(name='in', description='Inlet ports',
+                                                 storage_type='PORT',
                                                  max_size=inlet_ports_num, lock_names=True))
-            self._port_groups.add(ObjectsStorage(name='out', storage_type='PORT',
+            self._port_groups.add(ObjectsStorage(name='out', description='Outlet ports',
+                                                 storage_type='PORT',
                                                  max_size=outlet_ports_num, lock_names=True))
-            params_id = self._port_groups.add(ObjectsStorage(name='params', storage_type='PORT',
+            params_id = self._port_groups.add(ObjectsStorage(name='params', description='Params storage',
+                                                             storage_type='PORT',
                                                              max_size=1, lock_names=True))
-            self._port_groups[params_id].add(Port('params', parameters_num, direction='both'))
+            self._port_groups[params_id].add(Port('params',
+                                                  description='Params port',
+                                                  values_numer=parameters_num,
+                                                  direction='both'))
         else:
-            self._port_groups.add_with_key(registered_uuid['in'], ObjectsStorage(name='in', storage_type='PORT',
-                                                                                 max_size=inlet_ports_num, lock_names=True))
-            self._port_groups.add_with_key(registered_uuid['out'], ObjectsStorage(name='out', storage_type='PORT',
+            self._port_groups.add_with_key(registered_uuid['in'], ObjectsStorage(name='in',
+                                                                                 description='Inlet ports',
+                                                                                 storage_type='PORT',
+                                                                                 max_size=inlet_ports_num,
+                                                                                 lock_names=True))
+            self._port_groups.add_with_key(registered_uuid['out'], ObjectsStorage(name='out',
+                                                                                  description='Outlet ports',
+                                                                                  storage_type='PORT',
                                                                                   max_size=outlet_ports_num,
                                                                                   lock_names=True))
-            self._port_groups.add_with_key(registered_uuid['params'], ObjectsStorage(name='out', storage_type='PORT',
+            self._port_groups.add_with_key(registered_uuid['params'], ObjectsStorage(name='params',
+                                                                                     description='Params storage',
+                                                                                     storage_type='PORT',
                                                                                      max_size=1,
                                                                                      lock_names=True))
             self._port_groups[registered_uuid['params']].add_with_key(registered_uuid['params_port'],
-                                                                      Port('params', parameters_num, direction='both'))
+                                                                      Port('params',
+                                                                           description='Params port',
+                                                                           values_numer=parameters_num,
+                                                                           direction='both'))
 
 
     def _gen_path(self, port_group: Union[str, uuid.UUID],

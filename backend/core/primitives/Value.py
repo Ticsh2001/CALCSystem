@@ -113,8 +113,7 @@ class Value(BaseObject):
                  max_value: Optional[Any]=None,
                  serialize_data: bool=False):
         
-        super().__init__(name, ObjectType.VALUE)
-        self._description = description
+        super().__init__(name, description, ObjectType.VALUE)
         # Преобразование строкового статуса в enum ValueStatus при необходимости
         self._status = ValueStatus.from_input(status)
         # Преобразование строкового типа данных в enum DataType при необходимости
@@ -190,11 +189,6 @@ class Value(BaseObject):
     def spec(self) -> ValueSpec:
         """Возвращает копию спецификации значения."""
         return ValueSpec(self._value_spec.value_name, self._value_spec.dimension)
-    
-    @property
-    def description(self) -> str:
-        """Возвращает описание параметра."""
-        return self._description
     
     @property
     def value_type(self) -> DataType:

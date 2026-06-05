@@ -1,5 +1,7 @@
 {
+    "category": "test_category",
     "name": "test_element",
+    "description": "test_description",
     "inlet_ports":
     [
         {

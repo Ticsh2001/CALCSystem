@@ -15,13 +15,17 @@ class ClassFactory:
                             'serialize_data': False}
     
     default_port_params = {'values_number': -1,
+                           'description': '',
                            'direction': 'both'}
 
+    default_element_params = {'description': ''}
 
     def __init__(self, configs_path):
         self._config_path = configs_path
         self._register_value_specs()
         self._register_values()
+        self._register_ports()
+
 
     def _load_file(self, file_path: str):
         path = os.path.join(self._config_path, file_path)
@@ -41,17 +45,23 @@ class ClassFactory:
             res['name'] = data['name']
         except KeyError:
             return None
-        res['values_number'] = data.get('values_number', self.default_ports_params['max_size'])
+        res['values_number'] = data.get('values_number', self.default_port_params['values_number'])
         res['direction'] = data.get('direction', self.default_port_params['direction'])
         res['values'] = []
         for value in data['values']:
             if isinstance(value, str):
                 try:
                     value_address = value.split('.')
-                    res['values'].append(self._registered_values)
+                    res['values'].append(self._registered_values[value_address[0]][value_address[1]])
+                except KeyError:
+                    raise KeyError(f'Not registered value {value} in port specification')
+            elif isinstance(value, dict):
+                try:
+                    res['value'].append(self._extract_value_data(value))
+                except KeyError:
+                    raise KeyError(f'Incorrect value description')
+        return res
 
-
-    
     def _register_value_specs(self):
         self._registered_values_specs = dict()
         data = self._load_file("Value_specifications.json")
@@ -76,7 +86,12 @@ class ClassFactory:
             self._registered_ports[Path(file).stem] = dict()
             data = self._load_file(os.path.join('ports', file))
             for port in data:
-                self._registered_ports[Path(file).stem][port['name']] = 
+                self._registered_ports[Path(file).stem][port['name']] = self._extract_port_data(port)
+
+    def _register_elements(self):
+
+
+
 
         
 

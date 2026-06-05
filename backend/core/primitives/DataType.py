@@ -76,13 +76,24 @@ class ObjectType(EnumClassAbstraction, Enum):
     PORTPLUGIN = auto()  #Плагин для переноса через порты
 
 class BaseObject:
-    def __init__(self, name, object_type: Union[ObjectType, str]=ObjectType.UNKNOWN):
+    def __init__(self, name: str,
+                 description: str,
+                 object_type: Union[ObjectType, str]=ObjectType.UNKNOWN):
         self._name = name
         self._object_type = ObjectType.from_input(object_type)
+        self._description = description
 
     @property
     def name(self):
         return self._name
+
+    @property
+    def description(self):
+        return self._description
+
+    @description.setter
+    def description(self, desc: str):
+        self._description = desc
     
     @property
     def object_type(self):

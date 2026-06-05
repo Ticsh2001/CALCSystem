@@ -9,8 +9,8 @@ from collections import Counter
 
 
 class Port(BaseObject):
-    def __init__(self, name: str, values_number: int=-1, direction: str='both'):
-        super().__init__(name, ObjectType.PORT)
+    def __init__(self, name: str, description: str, values_number: int=-1, direction: str='both'):
+        super().__init__(name, description, ObjectType.PORT)
         self._direction = direction
         self._values = ObjectsStorage(f'{name}_values', ObjectType.VALUE, values_number, lock_names=True)
 

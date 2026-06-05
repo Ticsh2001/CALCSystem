@@ -47,8 +47,7 @@ class PortPluginMeta(ABCMeta):
 
 class PortPlugin(BaseObject, ABC, metaclass=PortPluginMeta):
     def __init__(self, name, author: str='', description: str='', version: str=''):
-        super().__init__(name, ObjectType.PORTPLUGIN)
-        self._description = description
+        super().__init__(name, description, ObjectType.PORTPLUGIN)
         self._version = version
         self._author = author
         self._init_state = dict()
